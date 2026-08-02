@@ -1,0 +1,125 @@
+import tkinter as tk
+from tkinter import messagebox
+
+USER_FILE = "users.txt"
+
+def validate_password(password):
+    if len(password) < 6:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    if not any(char.isalpha() for char in password):
+        return False
+    return True
+
+def register():
+    username = entry_user.get()
+    password = entry_pass.get()
+
+    if username == "" or password == "":
+        messagebox.showerror("Error", "All fields required")
+        return
+
+    if not validate_password(password):
+        messagebox.showerror("Error", "Password must contain letters & numbers")
+        return
+
+    with open(USER_FILE, "a") as f:
+        f.write(username + "," + password + "\n")
+
+    messagebox.showinfo("Success", "Registration Successful")
+
+def login():
+    username = entry_user.get()
+    password = entry_pass.get()
+
+    try:
+        with open(USER_FILE, "r") as f:
+            users = f.readlines()
+    except:
+        messagebox.showerror("Error", "No users found")
+        return
+
+    for user in users:
+        u, p = user.strip().split(",")
+        if u == username and p == password:
+            messagebox.showinfo("Success", "Login Successful")
+            open_quiz()
+            return
+
+    messagebox.showerror("Error", "Invalid Credentials")
+
+questions = [
+    ("Python is?", ["Language", "Car", "Food", "Game"], 0),
+    ("SQL used for?", ["Drawing", "Database", "Music", "Games"], 1),
+    ("2+2=?", ["3", "4", "5", "6"], 1)
+]
+
+score = 0
+q_index = 0
+
+def open_quiz():
+    global quiz_window, var, question_label, options
+
+    quiz_window = tk.Toplevel(root)
+    quiz_window.title("Quiz App")
+
+    var = tk.IntVar()
+
+    question_label = tk.Label(quiz_window, text="", font=("Arial", 14))
+    question_label.pack(pady=10)
+
+    options = []
+    for i in range(4):
+        rb = tk.Radiobutton(quiz_window, text="", variable=var, value=i)
+        rb.pack(anchor="w")
+        options.append(rb)
+
+    tk.Button(quiz_window, text="Next", command=next_question).pack(pady=10)
+
+    load_question()
+
+def load_question():
+    global q_index
+
+    if q_index < len(questions):
+        q, opts, _ = questions[q_index]
+        question_label.config(text=q)
+
+        for i in range(4):
+            options[i].config(text=opts[i])
+
+        var.set(-1)
+    else:
+        show_result()
+
+def next_question():
+    global q_index, score
+
+    _, _, correct = questions[q_index]
+
+    if var.get() == correct:
+        score += 1
+
+    q_index += 1
+    load_question()
+
+def show_result():
+    messagebox.showinfo("Result", f"Your Score: {score}/{len(questions)}")
+    quiz_window.destroy()
+
+root = tk.Tk()
+root.title("Login System")
+
+tk.Label(root, text="Username").pack()
+entry_user = tk.Entry(root)
+entry_user.pack()
+
+tk.Label(root, text="Password").pack()
+entry_pass = tk.Entry(root, show="*")
+entry_pass.pack()
+
+tk.Button(root, text="Register", command=register).pack(pady=5)
+tk.Button(root, text="Login", command=login).pack(pady=5)
+
+root.mainloop()
