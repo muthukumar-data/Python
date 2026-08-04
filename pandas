@@ -1,0 +1,9 @@
+import pandas as pd
+
+a=pd.read_csv("data.csv")
+
+print(a.to_string())
+#print(a.tail(150))
+
+b = a.fillna(130)
+print(b.to_string())
